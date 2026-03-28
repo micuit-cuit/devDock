@@ -22,12 +22,12 @@ static std::vector<const char*> to_cargs(const std::vector<std::string>& args) {
 // ── API publique ─────────────────────────────────────────────
 
 int run(const std::vector<std::string>& args) {
+    Log logger(__FILE__);
     if (args.empty()) return -1;
 
     pid_t pid = fork();
     if (pid < 0)
-        Log::error("fork() failed: " + std::string(strerror(errno)));
-
+        logger.error(CTX, "fork() failed: " + std::string(strerror(errno)));
     if (pid == 0) {
         auto cargs = to_cargs(args);
         execvp(cargs[0], const_cast<char* const*>(cargs.data()));
@@ -45,8 +45,10 @@ int shell(const std::string& script) {
 
 void run_or_die(const std::vector<std::string>& args, const std::string& err_msg) {
     int rc = run(args);
-    if (rc != 0)
-        Log::error(err_msg.empty() ? ("Commande échouée : " + args[0]) : err_msg);
+    if (rc != 0) {
+        Log logger(__FILE__);
+        logger.error(CTX, err_msg.empty() ? ("Commande échouée : " + args[0]) : err_msg);
+    }
 }
 
 void run_silent(const std::vector<std::string>& args) {

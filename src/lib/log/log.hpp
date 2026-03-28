@@ -4,8 +4,8 @@
 #include <typeinfo>
 #include <cxxabi.h>
 #include <vector>
-#include "json.hpp"
-#include "colors.hpp"
+#include "../json.hpp"
+#include "../colors.hpp"
 
 #define CTX Ctx{__func__, __LINE__}
 
