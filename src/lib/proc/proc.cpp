@@ -1,5 +1,5 @@
 #include "proc.hpp"
-#include "log.hpp"
+#include "../log/log.hpp"
 #include <unistd.h>
 #include <sys/wait.h>
 #include <fcntl.h>

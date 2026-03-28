@@ -1,6 +1,6 @@
 #include "./define.hpp"
 #include "./help/help.hpp"
-#include "./lib/log.hpp"
+#include "./lib/log/log.hpp"
 #include "./args/args.hpp"
 #include "./create/create.hpp"
 #include <iostream>
