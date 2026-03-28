@@ -7,7 +7,8 @@ int main(int argc, char* argv[]) {
     if (argc < 2) { print_help(argv[0]); return 0; }
     std::string command = argv[1];
     if (command == "help") {
-        print_help(argv[0]);
+        Help help;
+        help.print_help(argv[0]);
         return 0;
     }else if (command == "version") {
         std::cout << "devDock version " << VERSION << "\n";
