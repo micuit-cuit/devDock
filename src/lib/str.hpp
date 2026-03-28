@@ -6,7 +6,7 @@
 inline std::vector<std::string> split(const std::string& str, char delimiter) {
     std::vector<std::string> result;
     result.push_back("");
-    int i = 0;
+    long unsigned int i = 0;
     bool in_quotes = false;
     char last_char = '\0';
     while (i < str.size())
