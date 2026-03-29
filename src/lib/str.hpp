@@ -25,7 +25,7 @@ inline std::vector<std::string> split(const std::string& str, char delimiter) {
     
     return result;
 }
-inline std::string join(const std::vector<std::string>& parts, char delimiter, int startIndex = 0, int endIndex = -1) {
+inline std::string join(const std::vector<std::string>& parts, const std::string& delimiter, int startIndex = 0, int endIndex = -1) {
     if (endIndex == -1) endIndex = parts.size();
     std::string result;
     for (int i = startIndex; i < endIndex; ++i) {
@@ -33,4 +33,10 @@ inline std::string join(const std::vector<std::string>& parts, char delimiter, i
         result += parts[i];
     }
     return result;
+}
+inline std::string trim(const std::string& str) {
+    size_t first = str.find_first_not_of(" \t\n\r");
+    if (first == std::string::npos) return "";
+    size_t last = str.find_last_not_of(" \t\n\r");
+    return str.substr(first, last - first + 1);
 }
