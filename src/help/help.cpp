@@ -1,6 +1,6 @@
 #include "help.hpp"
-void Help::print_help(const char* program_name){
-    std::cout << "Usage: " << program_name << " <command> [options]\n";
+void Help::printHelp(const char* programName){
+    std::cout << "Usage: " << programName << " <command> [options]\n";
     std::cout << "Commands:\n";
     std::cout << "  build   Build a Docker image from a Dockerfile\n";
     std::cout << "  run     Run a command in a new container\n";
