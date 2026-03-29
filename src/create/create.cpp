@@ -1,13 +1,21 @@
 #include "create.hpp"
-
+const std::vector<std::string> FORCE_SINGLE_OPTIONS = {"os", "rootfs", "dest", "shell", "host-ip", "cont-ip", "subnet", "config", "generate-config", "start"};
+const std::vector<std::string> FORCE_ALL_OPTIONS = {"os", "rootfs", "dest", "shell", "host-ip", "cont-ip", "subnet", "config", "generate-config", "cmd", "env", "user", "services", "dns", "help", "start"};
 Create::Create(int argc, char** argv) {
     if (argc < 3) {
-        logger.error(CTX, "No container name provided");
+        logger.error(CTX, "No container name provided, use --help for usage information");
+        return;
+    }
+    if (hasOption("help", argc, argv)) {
         help(argv[0]);
         return;
     }
-    if (has_option("help", argc, argv)) {
-        help(argv[0]);
+    if (!testOptions(argc, argv)) {
+        return;
+    }
+    std::string debootstrap; 
+    if (hasOption("os", argc, argv) && (debootstrap = debootstrapPath()).empty()) {
+        logger.error(CTX, "debootstrap is not installed. Please install it to use the create command.");
         return;
     }
 }
@@ -131,4 +139,30 @@ void Create::help(std::string processName) {
         "  " + c_ex + processName + " create mycontainer --os=ubuntu --generate-config > mycontainer.json" + r + "\n"
     );
 }
+std::string Create::debootstrapPath() {
+    std::string rc = Proc::capture({"which", "debootstrap"});
+    return rc.empty() ? "" : trim(rc);
+}
+bool Create::testOptions(int argc, char** argv) {
 
+    if (hasOption("rootfs", argc, argv) && hasOption("os", argc, argv)) {
+        logger.error(CTX, "Cannot use both --rootfs and --os options at the same time.");
+        return false;
+    }
+    if (hasOption("rootfs", argc, argv) && hasOption("dest", argc, argv)) {
+        logger.error(CTX, "Cannot use both --rootfs and --dest options at the same time.");
+        return false;
+    }
+    for (const std::string& opt : FORCE_SINGLE_OPTIONS) {
+        if (hasMultipleOptions(opt, argc, argv) > 1) {
+            logger.error(CTX, "Multiple --" + opt + " options provided. Please specify only one.");
+            return false;
+        }
+    }
+    if (auto invalids = hasInvalidOptions(FORCE_ALL_OPTIONS, argc, argv); invalids.has_value()) {
+        logger.error(CTX, "Invalid options provided:", join(invalids.value(), ", "));
+        return false;
+    }
+
+    return true;
+}

@@ -9,12 +9,12 @@
 int main(int argc, char* argv[]) {
     Log logger(__FILE__);
 
-    if (argc < 2) { logger.error("No command provided");Help help; help.print_help(argv[0]); return 0; }
+    if (argc < 2) { logger.error("No command provided");Help help; help.printHelp(argv[0]); return 0; }
     std::string command = argv[1];
     logger.dev(CTX, "Command received", command, "with args");
     if (command == "run") {
         // start a process to list files in current directory
-        std::string cmd = get_option_value("cmd", argc, argv);
+        std::string cmd = getOptionValue("cmd", argc, argv).value_or("");
         if (cmd.empty()) cmd = "ls -l";
         std::vector<std::string> args = split(cmd, ' ');
         logger.dev(CTX, "Running command", cmd);
@@ -25,7 +25,7 @@ int main(int argc, char* argv[]) {
         logger.dev(CTX, cmd, "command exited with code", rc);
         return rc;
     }else if (command == "shell") {
-        std::string script = get_option_value("script", argc, argv);
+        std::string script = getOptionValue("script", argc, argv).value_or("");
         if (script.empty()) script = "echo Hello from shell!";
         logger.dev(CTX, "Running shell script", script);
         int rc = Proc::shell(script);
@@ -35,21 +35,21 @@ int main(int argc, char* argv[]) {
         logger.dev(CTX, "Shell command exited with code", rc);
         return rc;
     }else if (command == "rod") {
-        std::string cmd = get_option_value("cmd", argc, argv);
+        std::string cmd = getOptionValue("cmd", argc, argv).value_or("");
         if (cmd.empty()) cmd = "ls -l";
         std::vector<std::string> args = split(cmd, ' ');
-        logger.dev(CTX, "Running command with run_or_die", cmd);
-        Proc::run_or_die(args, "Failed to execute command: " + cmd);
+        logger.dev(CTX, "Running command with runOrDie", cmd);
+        Proc::runOrDie(args, "Failed to execute command: " + cmd);
         return 0;
     }else if (command == "silent") {
-        std::string cmd = get_option_value("cmd", argc, argv);
+        std::string cmd = getOptionValue("cmd", argc, argv).value_or("");
         if (cmd.empty()) cmd = "ls -l";
         std::vector<std::string> args = split(cmd, ' ');
         logger.dev(CTX, "Running command silently", cmd);
-        Proc::run_silent(args);
+        Proc::runSilent(args);
         return 0;
     }else if (command == "capture") {
-        std::string cmd = get_option_value("cmd", argc, argv);
+        std::string cmd = getOptionValue("cmd", argc, argv).value_or("");
         if (cmd.empty()) cmd = "echo Captured output";
         std::vector<std::string> args = split(cmd, ' ');
         logger.dev(CTX, "Capturing output of command", cmd);
@@ -59,7 +59,7 @@ int main(int argc, char* argv[]) {
     }
     if (command == "help") {
         Help help;
-        help.print_help(argv[0]);
+        help.printHelp(argv[0]);
         return 0;
     }else if (command == "version") {
         logger.info("devDock version", VERSION);
@@ -87,7 +87,7 @@ int main(int argc, char* argv[]) {
         logger.info("Remove a devContainer");
         return 0;
     }
-    if (has_option("help", argc, argv)) {
+    if (hasOption("help", argc, argv)) {
         logger.info("Help requested");
         return 0;
     }
