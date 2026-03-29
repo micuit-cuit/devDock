@@ -59,6 +59,7 @@ public:
     template<typename... Args> void warn (Ctx ctx, Args... args) { print( 2, ctx,   args...); }
     template<typename... Args> void error(Args... args)          { print( 3, Ctx{}, args...); }
     template<typename... Args> void error(Ctx ctx, Args... args) { print( 3, ctx,   args...); }
+    template<typename... Args> void raw  (Args... args)          { print( 4, Ctx{}, args...); }
 
 private:
     std::string fileName;
@@ -89,7 +90,12 @@ private:
     void print(const int status, const Ctx& ctx, Args... args) {
         std::string output;
         std::string color;
-
+        if (status == 4) {
+            //affichage sans tréter le contenu (utile pour les messages déjà formatés ou colorés)
+            print_one(output, "", args...);
+            std::cout << output << std::endl;
+            return;
+        }
         switch (status) {
             case -1: color = colors::magenta; output += color + colors::bold + "[DEV] "   + colors::reset; break;
             case  0: color = colors::cyan;    output += color + colors::bold + "[LOG] "   + colors::reset; break;
