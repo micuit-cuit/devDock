@@ -10,7 +10,7 @@ namespace Proc {
 
 // ── Helpers internes ─────────────────────────────────────────
 
-static std::vector<const char*> to_cargs(const std::vector<std::string>& args) {
+static std::vector<const char*> toCargs(const std::vector<std::string>& args) {
     std::vector<const char*> cargs;
     cargs.reserve(args.size() + 1);
     for (const auto& a : args)
@@ -29,7 +29,7 @@ int run(const std::vector<std::string>& args) {
     if (pid < 0)
         logger.error(CTX, "fork() failed: " + std::string(strerror(errno)));
     if (pid == 0) {
-        auto cargs = to_cargs(args);
+        auto cargs = toCargs(args);
         execvp(cargs[0], const_cast<char* const*>(cargs.data()));
         _exit(127);
     }
@@ -43,15 +43,15 @@ int shell(const std::string& script) {
     return run({"/bin/bash", "-c", script});
 }
 
-void run_or_die(const std::vector<std::string>& args, const std::string& err_msg) {
+void runOrDie(const std::vector<std::string>& args, const std::string& errMsg) {
     int rc = run(args);
     if (rc != 0) {
         Log logger(__FILE__);
-        logger.error(CTX, err_msg.empty() ? ("Commande échouée : " + args[0]) : err_msg);
+        logger.error(CTX, errMsg.empty() ? ("Commande échouée : " + args[0]) : errMsg);
     }
 }
 
-void run_silent(const std::vector<std::string>& args) {
+void runSilent(const std::vector<std::string>& args) {
     if (args.empty()) return;
 
     pid_t pid = fork();
@@ -62,7 +62,7 @@ void run_silent(const std::vector<std::string>& args) {
             dup2(devnull, STDERR_FILENO);
             close(devnull);
         }
-        auto cargs = to_cargs(args);
+        auto cargs = toCargs(args);
         execvp(cargs[0], const_cast<char* const*>(cargs.data()));
         _exit(127);
     }
@@ -81,7 +81,7 @@ std::string capture(const std::vector<std::string>& args) {
         close(pipefd[0]);
         dup2(pipefd[1], STDOUT_FILENO);
         close(pipefd[1]);
-        auto cargs = to_cargs(args);
+        auto cargs = toCargs(args);
         execvp(cargs[0], const_cast<char* const*>(cargs.data()));
         _exit(127);
     }

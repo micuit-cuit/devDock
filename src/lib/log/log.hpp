@@ -64,10 +64,10 @@ public:
 private:
     std::string fileName;
 
-    void print_one(std::string&, const std::string&) {}
+    void printOne(std::string&, const std::string&) {}
 
     template<typename T, typename... Rest>
-    void print_one(std::string& output, const std::string& color, T arg, Rest... rest) {
+    void printOne(std::string& output, const std::string& color, T arg, Rest... rest) {
         if constexpr (std::is_same_v<T, std::string>) {
             output += color + arg + colors::reset + " ";
         } else if constexpr (std::is_same_v<std::decay_t<T>, char*> || std::is_same_v<std::decay_t<T>, const char*>) {
@@ -83,7 +83,7 @@ private:
         } else {
             output += colors::green + "<" + getTypeName<T>() + ">" + colors::reset + " ";
         }
-        print_one(output, color, rest...);
+        printOne(output, color, rest...);
     }
 
     template<typename... Args>
@@ -92,7 +92,7 @@ private:
         std::string color;
         if (status == 4) {
             //affichage sans tréter le contenu (utile pour les messages déjà formatés ou colorés)
-            print_one(output, "", args...);
+            printOne(output, "", args...);
             std::cout << output << std::endl;
             return;
         }
@@ -115,7 +115,7 @@ private:
             output += colors::color<255, 105, 180>() + "(line " + std::to_string(ctx.line) + ")"+ colors::reset + " ";
         else if (!ctx.function.empty())
             output += colors::color<255, 105, 180>() + "(" + ctx.function + ")"+ colors::reset + " ";
-        print_one(output, color, args...);
+        printOne(output, color, args...);
         std::cout << output << std::endl;
     }
 };
