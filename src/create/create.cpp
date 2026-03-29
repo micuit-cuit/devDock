@@ -1,7 +1,9 @@
 #include "create.hpp"
 const std::vector<std::string> FORCE_SINGLE_OPTIONS = {"os", "rootfs", "dest", "shell", "host-ip", "cont-ip", "subnet", "config", "generate-config", "start"};
 const std::vector<std::string> FORCE_ALL_OPTIONS = {"os", "rootfs", "dest", "shell", "host-ip", "cont-ip", "subnet", "config", "generate-config", "cmd", "env", "user", "services", "dns", "help", "start"};
+const std::vector<std::string> JSON_KEYS = {"os", "rootfs", "dest", "shell", "host-ip", "cont-ip", "subnet", "cmd", "env", "user", "services", "dns"};
 Create::Create(int argc, char** argv) {
+    // Vérification des arguments
     if (argc < 3) {
         logger.error(CTX, "No container name provided, use --help for usage information");
         return;
@@ -13,11 +15,16 @@ Create::Create(int argc, char** argv) {
     if (!testOptions(argc, argv)) {
         return;
     }
+    // Vérification de debootstrap si une source d'OS est demandée
     std::string debootstrap; 
     if (hasOption("os", argc, argv) && (debootstrap = debootstrapPath()).empty()) {
         logger.error(CTX, "debootstrap is not installed. Please install it to use the create command.");
         return;
     }
+    // parsing des options dans un json de config
+    std::string configPath = getOptionValue("config", argc, argv).value_or("");
+    nlohmann::json config = parseConfigFile(configPath, argc, argv);
+    logger.dev(CTX, "Final config:", config);
 }
 
 void Create::help(std::string processName) {
@@ -144,7 +151,6 @@ std::string Create::debootstrapPath() {
     return rc.empty() ? "" : trim(rc);
 }
 bool Create::testOptions(int argc, char** argv) {
-
     if (hasOption("rootfs", argc, argv) && hasOption("os", argc, argv)) {
         logger.error(CTX, "Cannot use both --rootfs and --os options at the same time.");
         return false;
@@ -165,4 +171,84 @@ bool Create::testOptions(int argc, char** argv) {
     }
 
     return true;
+}
+nlohmann::json Create::parseConfigFile(std::string path, int argc, char** argv) {
+    nlohmann::json config;
+    nlohmann::json configFile;
+
+    if (!path.empty()){
+        std::ifstream file(path);
+        if (!file.is_open())
+            throw std::runtime_error("Could not open config file: " + path);
+        configFile = nlohmann::json::parse(file, nullptr, false);
+
+        if (configFile.is_discarded())
+            throw std::runtime_error("Invalid JSON in config file: " + path);
+        file.close();
+    }else {
+        configFile = nlohmann::json::object();
+    }
+    for (const std::string& key : JSON_KEYS) {
+        bool isSingle = std::find(FORCE_SINGLE_OPTIONS.begin(), FORCE_SINGLE_OPTIONS.end(), key)
+                        != FORCE_SINGLE_OPTIONS.end();
+
+        if (isSingle) {
+            if (configFile.contains(key) && configFile[key].is_array()) {
+                logger.error(CTX, "Option '" + key + "' cannot be an array in config file.");
+                return {};
+            }
+
+            if (hasOption(key, argc, argv)) {
+                auto val = getOptionValue(key, argc, argv);
+                if (!val.has_value()) {
+                    logger.error(CTX, "Option '" + key + "' has no value.");
+                    return {};
+                }
+                config[key] = val.value();
+            } else if (configFile.contains(key)) {
+                config[key] = configFile[key];
+            } else {
+                // Valeurs par défaut
+                if      (key == "shell")   config[key] = "/bin/bash";
+                else if (key == "host-ip") config[key] = "10.88.0.1";
+                else if (key == "cont-ip") config[key] = "10.88.0.2";
+                else if (key == "subnet")  config[key] = "10.88.0.0/24";
+                // else if (key == "rootfs" || key == "os") {
+                //     logger.error(CTX, "Missing required option '" + key + "'.");
+                //     return {};
+                // }
+            }
+        } else {
+            // Options multiples (arrays)
+            if (configFile.contains(key) && configFile[key].is_array()) {
+                for (const auto& item : configFile[key]) {
+                    if (!item.is_string()) {
+                        logger.error(CTX, "All items in array option '" + key + "' must be strings.");
+                        return {};
+                    }
+                    config[key].push_back(item);
+                }
+            }
+
+            if (hasOption(key, argc, argv)) {
+                int count = hasMultipleOptions(key, argc, argv);
+                for (int i = 0; i < count; ++i) {
+                    auto val = getOptionValue(key, argc, argv, i);
+                    if (!val.has_value()) continue;
+
+                    const std::string& cliValue = val.value();
+
+                    auto& arr = config[key];
+                    bool duplicate = std::find(arr.begin(), arr.end(), cliValue) != arr.end();
+
+                    if (duplicate) {
+                        logger.warn(CTX, "Duplicate value for '" + key + "': '" + cliValue + "'. Skipping.");
+                    } else {
+                        arr.push_back(cliValue);
+                    }
+                }
+            }
+        }
+    }
+    return config;
 }

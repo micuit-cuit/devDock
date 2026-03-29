@@ -3,3 +3,4 @@ main
 loglast.cpp
 .obj/
 testExitCode
+test.json
