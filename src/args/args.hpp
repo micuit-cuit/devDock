@@ -1,4 +1,10 @@
+#pragma once
 #include <string>
 #include "../lib/str.hpp"
-int has_option(const std::string& option, int argc, char* argv[]);
-std::string get_option_value(const std::string& option, int argc, char* argv[]);
+#include <optional>
+#include <vector>
+
+int hasOption(const std::string& option, int argc, char* argv[]);
+int hasMultipleOptions(const std::string& option, int argc, char* argv[]);
+std::optional<std::string> getOptionValue(const std::string& option, int argc, char* argv[], int index = 0);
+std::optional<std::vector<std::string>> hasInvalidOptions(const std::vector<std::string>& options, int argc, char* argv[]);
