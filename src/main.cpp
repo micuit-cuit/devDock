@@ -66,6 +66,7 @@ int main(int argc, char* argv[]) {
         return 0;
     }else if (command == "create") {
         logger.info("Creating devContainer");
+        Create create(argc, argv);
         return 0;
     }else if (command == "ps") {
         logger.info("List running devContainers");
